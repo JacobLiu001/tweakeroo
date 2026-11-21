@@ -11,7 +11,6 @@ import net.minecraft.world.effect.MobEffects;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.level.Level;
-import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.entity.SignBlockEntity;
 import net.minecraft.world.phys.BlockHitResult;
@@ -27,13 +26,13 @@ import fi.dy.masa.malilib.interfaces.IValueChangeCallback;
 import fi.dy.masa.malilib.render.InventoryOverlayScreen;
 import fi.dy.masa.malilib.util.InfoUtils;
 import fi.dy.masa.malilib.util.StringUtils;
+import fi.dy.masa.malilib.util.input.InputUtils;
 import fi.dy.masa.tweakeroo.Reference;
 import fi.dy.masa.tweakeroo.data.CachedTagManager;
 import fi.dy.masa.tweakeroo.data.CameraPresetManager;
 import fi.dy.masa.tweakeroo.data.EntityDataManager;
 import fi.dy.masa.tweakeroo.gui.GuiCameraPresetEditor;
 import fi.dy.masa.tweakeroo.gui.GuiConfigs;
-import fi.dy.masa.tweakeroo.mixin.block.IMixinBlockBehaviour;
 import fi.dy.masa.tweakeroo.mixin.option.IMixinSimpleOption;
 import fi.dy.masa.tweakeroo.renderer.InventoryOverlayHandler;
 import fi.dy.masa.tweakeroo.tweaks.RenderTweaks;
@@ -48,7 +47,6 @@ public class Callbacks
 //		FeatureToggle.TWEAK_F3_CURSOR.setValueChangeCallback(new FeatureCallbackF3Toggle(FeatureToggle.TWEAK_F3_CURSOR, mc));
         FeatureToggle.TWEAK_GAMMA_OVERRIDE.setValueChangeCallback(new FeatureCallbackGamma(FeatureToggle.TWEAK_GAMMA_OVERRIDE, mc));
         FeatureToggle.TWEAK_DARKNESS_VISIBILITY.setValueChangeCallback(new FeatureCallbackDarkness(FeatureToggle.TWEAK_DARKNESS_VISIBILITY, mc));
-        Configs.Disable.DISABLE_SLIME_BLOCK_SLOWDOWN.setValueChangeCallback(new FeatureCallbackSlime(Configs.Disable.DISABLE_SLIME_BLOCK_SLOWDOWN));
 
         FeatureToggle.TWEAK_FAST_BLOCK_PLACEMENT.getKeybind().setCallback(new KeyCallbackToggleFastMode(FeatureToggle.TWEAK_FAST_BLOCK_PLACEMENT));
         FeatureToggle.TWEAK_FAST_BLOCK_PLACEMENT.setValueChangeCallback((cfg) ->
@@ -199,14 +197,16 @@ public class Callbacks
         @Override
         public void onValueChanged(IConfigBoolean config)
         {
+	        InputConstants.Key key = InputUtils.getBoundKey(this.keyBind);
+
             if (config.getBooleanValue())
             {
-                KeyMapping.set(InputConstants.getKey(this.keyBind.saveString()), true);
-                KeyMapping.click(InputConstants.getKey(this.keyBind.saveString()));
+                KeyMapping.set(key, true);
+                KeyMapping.click(key);
             }
             else
             {
-                KeyMapping.set(InputConstants.getKey(this.keyBind.saveString()), false);
+                KeyMapping.set(key, false);
             }
         }
     }
@@ -316,33 +316,6 @@ public class Callbacks
             if (opt != null)
             {
                 opt.tweakeroo_setValueWithoutCheck(darkness);
-            }
-        }
-    }
-
-    public static class FeatureCallbackSlime implements IValueChangeCallback<ConfigBoolean>
-    {
-        public FeatureCallbackSlime(ConfigBoolean feature)
-        {
-            Configs.Internal.SLIME_BLOCK_SLIPPERINESS_ORIGINAL.setDoubleValue(Blocks.SLIME_BLOCK.getFriction());
-
-            // If the feature is enabled on game launch, apply the overridden value here
-            if (feature.getBooleanValue())
-            {
-                ((IMixinBlockBehaviour) Blocks.SLIME_BLOCK).setFriction(Blocks.STONE.getFriction());
-            }
-        }
-
-        @Override
-        public void onValueChanged(ConfigBoolean config)
-        {
-            if (config.getBooleanValue())
-            {
-                ((IMixinBlockBehaviour) Blocks.SLIME_BLOCK).setFriction(Blocks.STONE.getFriction());
-            }
-            else
-            {
-                ((IMixinBlockBehaviour) Blocks.SLIME_BLOCK).setFriction((float) Configs.Internal.SLIME_BLOCK_SLIPPERINESS_ORIGINAL.getDoubleValue());
             }
         }
     }
